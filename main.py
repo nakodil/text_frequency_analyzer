@@ -7,6 +7,11 @@ from PyQt5.QtWidgets import QFileDialog  # pip install pyside2
 from PyQt5 import QtTest  # pip install pyside2
 from interface import *
 
+# для облака слов
+from PIL import Image
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+
 
 app = QtWidgets.QApplication(sys.argv)
 MainWindow = QtWidgets.QMainWindow()
@@ -52,6 +57,7 @@ def interface_is_active(condition: bool):
     ui.show_source_select_dialog.setEnabled(condition)
     ui.save_result_to_file.setEnabled(condition)
     ui.words_number.setEnabled(condition)
+    ui.make_wordcloud.setEnabled(condition)
 
 
 def get_text_str() -> str:
@@ -135,7 +141,7 @@ def result_to_widget(result_dict: dict):
     Записывает пары словаря построчно по убыванию в виджет «Результат»
     """
     for key, value in result_dict.items():
-        result_item = f"{key} : {value}\n"
+        result_item = f"{key} : {value}"
         ui.result.addItem(result_item)
 
 
@@ -155,6 +161,31 @@ def save_result_to_file():
     ui.message.addItem(f"Результат сохранен в {destination_file_path}")
 
 
+def make_wordcloud():
+    """
+    Открывает диалог выбора файла-изображения
+    и сохраняет в него результат в виде облака слов.
+    TODO: WC аргументы словарем
+    """
+    image_file = QFileDialog.getOpenFileName(filter="*.png")
+    image_file_path = image_file[0]
+
+    wc_arguments_dict = {
+        "background_color" : "white",
+        "max_words" : 1000,
+        "width" : 1000,
+        "height" : 1000,
+        "relative_scaling" : 0.5,
+        "normalize_plurals" : False
+    }
+    wc = WordCloud(**wc_arguments_dict).generate_from_frequencies(result_dict)
+    plt.figure(figsize=(10, 10))
+    plt.axis("off")
+    plt.imshow(wc)
+    plt.savefig(image_file_path, dpi=100, facecolor='k', bbox_inches='tight')
+    ui.message.addItem(f"Облако слов сохранено в {image_file_path}")
+
+
 def main():
     """
     Основная функция. Выполняет программу последовательно,
@@ -163,6 +194,7 @@ def main():
     Для изменения интерфейса в ходе выполнения функции main()
     используется прерывание на время с помощью QtTest.QTest.qWait(1)
     """
+    global result_dict  # TODO: сделать локальным
     start_time = time.time()
     word_type_list = get_word_type()
     interface_is_active(False)
@@ -209,5 +241,6 @@ ui.show_source_select_dialog.clicked.connect(show_source_select_dialog)
 ui.save_result_to_file.clicked.connect(save_result_to_file)
 ui.source_file_path.textChanged.connect(check_source_file_path)
 ui.analyze.clicked.connect(main)
+ui.make_wordcloud.clicked.connect(make_wordcloud)
 
 sys.exit(app.exec_())
