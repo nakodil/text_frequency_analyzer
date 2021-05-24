@@ -124,11 +124,11 @@ def morph_analyze_text(text_list: list, word_type_list: list) -> list:
         if "ADJF" in word_type_list or "ADJS" in word_type_list:
             if "ADJF" in p.tag or "ADJS" in p.tag:
                 normal_list.append(p.normal_form)
-       
+
         # добавляем единицу к прогресс-бару
         QtTest.QTest.qWait(0)
         ui.progress.setValue(progress_i)
-        progress_i +=1
+        progress_i += 1
 
     return normal_list
 
@@ -161,7 +161,7 @@ def save_result_to_file():
     Сохраняет содержимое виджета «Результат» в выбранный файл.
     Выдает сообщение в виджет «Ход выполнения программы».
     """
-    destination_file = QFileDialog.getOpenFileName(filter="*.txt")
+    destination_file = QFileDialog.getSaveFileName(filter="*.txt")
     destination_file_path = destination_file[0]
 
     with open(destination_file_path, "w", encoding="utf-8") as file:
@@ -182,13 +182,14 @@ def make_wordcloud():
     image_file_path = image_file[0]
 
     wc_arguments_dict = {
-        "background_color" : "black",
-        "max_words" : 1000,
-        "width" : 1000,
-        "height" : 1000,
-        "relative_scaling" : 0.5,
-        "normalize_plurals" : False
+        "background_color": "black",
+        "max_words": 1000,
+        "width": 1000,
+        "height": 1000,
+        "relative_scaling": 0.5,
+        "normalize_plurals": False
     }
+
     wc = WordCloud(**wc_arguments_dict).generate_from_frequencies(result_dict)
     plt.figure(figsize=(10, 10))
     plt.axis("off")
