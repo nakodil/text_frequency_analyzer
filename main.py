@@ -178,11 +178,11 @@ def make_wordcloud():
     и сохраняет в него результат в виде облака слов.
     TODO: WC аргументы словарем
     """
-    image_file = QFileDialog.getOpenFileName(filter="*.png")
+    image_file = QFileDialog.getSaveFileName(filter="*.png")
     image_file_path = image_file[0]
 
     wc_arguments_dict = {
-        "background_color" : "white",
+        "background_color" : "black",
         "max_words" : 1000,
         "width" : 1000,
         "height" : 1000,
