@@ -58,6 +58,7 @@ def interface_is_active(condition: bool):
     ui.save_result_to_file.setEnabled(condition)
     ui.words_number.setEnabled(condition)
     ui.make_wordcloud.setEnabled(condition)
+    ui.progress.setValue(int(condition))
 
 
 def get_text_str() -> str:
@@ -107,6 +108,11 @@ def morph_analyze_text(text_list: list, word_type_list: list) -> list:
     normal_list = []
     morph = pymorphy2.MorphAnalyzer()
 
+    # задаем максимум для прогресс-бара
+    progress_max_value = len(text_list)
+    ui.progress.setMaximum(progress_max_value)
+    progress_i = 0
+
     for word in text_list:
         p = morph.parse(word)[0]
         if "NOUN" in word_type_list:
@@ -118,6 +124,11 @@ def morph_analyze_text(text_list: list, word_type_list: list) -> list:
         if "ADJF" in word_type_list or "ADJS" in word_type_list:
             if "ADJF" in p.tag or "ADJS" in p.tag:
                 normal_list.append(p.normal_form)
+       
+        # добавляем единицу к прогресс-бару
+        QtTest.QTest.qWait(0)
+        ui.progress.setValue(progress_i)
+        progress_i +=1
 
     return normal_list
 
@@ -192,7 +203,7 @@ def main():
     если удалось получить текстовое содержимое из файла.
     PYQT не обновит интерфейс, пока не завершится функция main().
     Для изменения интерфейса в ходе выполнения функции main()
-    используется прерывание на время с помощью QtTest.QTest.qWait(1)
+    используется прерывание на время с помощью QtTest.QTest.qWait(0)
     """
     global result_dict  # TODO: сделать локальным
     start_time = time.time()
@@ -201,7 +212,7 @@ def main():
     ui.message.clear()
     ui.result.clear()
     ui.message.addItem(f"Идет анализ текста. Пожалуйста, подождите!")
-    QtTest.QTest.qWait(1)
+    QtTest.QTest.qWait(0)
 
     try:
         text_str = get_text_str()
@@ -214,7 +225,7 @@ def main():
         ui.show_source_select_dialog.setEnabled(True)
         ui.words_number.setEnabled(True)
         return None
-        QtTest.QTest.qWait(1)
+        QtTest.QTest.qWait(0)
 
     if word_type_list:
         text_list = prepare_text(text_str)
@@ -225,7 +236,7 @@ def main():
         ui.message.addItem(f"Анализ завершен за {end_time} секунд")
         interface_is_active(True)
         ui.save_result_to_file.setEnabled(True)
-        QtTest.QTest.qWait(1)
+        QtTest.QTest.qWait(0)
 
     else:
         ui.message.addItem(f"Части речи не выбраны, анализ невозможен!")
@@ -233,7 +244,7 @@ def main():
         ui.show_source_select_dialog.setEnabled(True)
         ui.words_number.setEnabled(True)
         return None
-        QtTest.QTest.qWait(1)
+        QtTest.QTest.qWait(0)
 
 
 # привязка сигналов к событиям элементов интерфейса
