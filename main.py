@@ -6,6 +6,9 @@ from PyQt5.QtWidgets import QFileDialog  # pip install pyside2
 from PyQt5 import QtTest  # pip install pyside2
 from interface import *
 
+# для разбора документов MS Word
+import docx
+
 # для морфологического анализа
 import pymorphy2  # pip install pymorphy2
 
@@ -37,10 +40,10 @@ wc_arguments_dict = {
 
 def show_source_select_dialog():
     """
-    Показывает диалог выбора файла, доступны только *.txt.
+    Показывает диалог выбора файла, доступны только *.txt и *.docx.
     Сохраняет путь выбранного файла в source_file_path.
     """
-    source_file_path = QFileDialog.getOpenFileName(filter="*.txt")
+    source_file_path = QFileDialog.getOpenFileName(filter="*.txt *.docx")
     ui.source_file_path.setText(source_file_path[0])
 
 
@@ -49,7 +52,6 @@ def check_source_file_path():
     Проверяет выбранный путь до файла-источника.
     Если путь введен, активирует кнопку «Анализировать источник».
     Если путь пустой, блокирует кнопку «Анализировать источник».
-    TODO: валидация типа файла
     """
     source_file_path = ui.source_file_path.toPlainText()
     if source_file_path:
@@ -77,11 +79,25 @@ def interface_is_active(condition: bool):
 
 def get_text_str() -> str:
     """
-    Открывает файл, нормализует кодировку его текстового содержимого и
-    записывает его в строку
+    Берет путь к файлу и определяет его тип.
+    У *.txt нормализует кодировку его текстового содержимого и
+    записывает его в строку.
+    У *.docx парсит содержимое и записывает его в строку.
     """
+    # TODO: определить тип файла по пути
+    source_file_type = "txt"
     source_file_path = ui.source_file_path.toPlainText()
-    text_str = str(cnm.from_path(source_file_path).best().first())
+    if source_file_type == "docx":
+        doc = docx.Document('example.docx')
+        text = []
+        # FIXME: Здесь три одинаковых параграфа в виде списка
+        for paragraph in doc.paragraphs:
+            text.append(paragraph.text)
+            print(text)
+        text_str = text(' '.join(text))
+        print(text_str)
+    else:
+        text_str = str(cnm.from_path(source_file_path).best().first())
     return text_str
 
 
