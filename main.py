@@ -24,6 +24,16 @@ ui = Ui_MainWindow()
 ui.setupUi(MainWindow)
 MainWindow.show()
 
+# настройка изображения WordCloud
+wc_arguments_dict = {
+    "background_color": "black",
+    "max_words": 1000,
+    "width": 2000,
+    "height": 1000,
+    "relative_scaling": 0.25,
+    "normalize_plurals": False
+}
+
 
 def show_source_select_dialog():
     """
@@ -178,22 +188,16 @@ def make_wordcloud():
     """
     Открывает диалог выбора файла-изображения
     и сохраняет в него результат в виде облака слов.
-    TODO: WC аргументы словарем
+    Сначала WordCloud генерирует изображение width×height,
+    потом «вписывает» его в plot.
+    У изображения удалены границы, оно получится меньше, чем мы задали.
+    https://stackoverflow.com/questions/28786534/increase-resolution-with-word-cloud-and-remove-empty-border
     """
     image_file = QFileDialog.getSaveFileName(filter="*.png")
     image_file_path = image_file[0]
 
-    wc_arguments_dict = {
-        "background_color": "black",
-        "max_words": 1000,
-        "width": 1000,
-        "height": 1000,
-        "relative_scaling": 0.5,
-        "normalize_plurals": False
-    }
-
     wc = WordCloud(**wc_arguments_dict).generate_from_frequencies(result_dict)
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(20, 10))  # умножается на dpi
     plt.axis("off")
     plt.imshow(wc)
     plt.savefig(image_file_path, dpi=100, facecolor='k', bbox_inches='tight')
@@ -238,7 +242,8 @@ def main():
         end_time = round(time.time() - start_time, 2)
         ui.message.addItem(f"Анализ завершен за {end_time} секунд")
         interface_is_active(True)
-        ui.save_result_to_file.setEnabled(True)  # TODO: убрать в функцию интерфейса
+        # TODO: убрать в функцию интерфейса
+        ui.save_result_to_file.setEnabled(True)
         ui.progress.setValue(0)
 
     else:
