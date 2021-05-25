@@ -1,16 +1,21 @@
 import re
 import sys
 import time
-import pymorphy2  # pip install pymorphy2
 from collections import Counter
 from PyQt5.QtWidgets import QFileDialog  # pip install pyside2
 from PyQt5 import QtTest  # pip install pyside2
 from interface import *
 
+# для морфологического анализа
+import pymorphy2  # pip install pymorphy2
+
 # для облака слов
 from PIL import Image
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+
+# нормализация для файлов с разной кодировкой
+from charset_normalizer import CharsetNormalizerMatches as cnm  # pip install
 
 
 app = QtWidgets.QApplication(sys.argv)
@@ -22,8 +27,8 @@ MainWindow.show()
 
 def show_source_select_dialog():
     """
-    Показывает диалог выбора файла.
-    Сохраняет выбранный файл в source_file_path.
+    Показывает диалог выбора файла, доступны только *.txt.
+    Сохраняет путь выбранного файла в source_file_path.
     """
     source_file_path = QFileDialog.getOpenFileName(filter="*.txt")
     ui.source_file_path.setText(source_file_path[0])
@@ -58,17 +63,15 @@ def interface_is_active(condition: bool):
     ui.save_result_to_file.setEnabled(condition)
     ui.words_number.setEnabled(condition)
     ui.make_wordcloud.setEnabled(condition)
-    ui.progress.setValue(int(condition))
 
 
 def get_text_str() -> str:
     """
-    Открывает файл и забирает содержимое в строку.
+    Открывает файл, нормализует кодировку его текстового содержимого и
+    записывает его в строку
     """
     source_file_path = ui.source_file_path.toPlainText()
-    source_file = open(source_file_path, "r", encoding="utf-8")
-    text_str = source_file.read()
-    source_file.close()
+    text_str = str(cnm.from_path(source_file_path).best().first())
     return text_str
 
 
@@ -129,7 +132,6 @@ def morph_analyze_text(text_list: list, word_type_list: list) -> list:
         QtTest.QTest.qWait(0)
         ui.progress.setValue(progress_i)
         progress_i += 1
-
     return normal_list
 
 
@@ -206,7 +208,7 @@ def main():
     Для изменения интерфейса в ходе выполнения функции main()
     используется прерывание на время с помощью QtTest.QTest.qWait(0)
     """
-    global result_dict  # TODO: сделать локальным
+    global result_dict  # TODO: сделать локальным?
     start_time = time.time()
     word_type_list = get_word_type()
     interface_is_active(False)
@@ -236,16 +238,14 @@ def main():
         end_time = round(time.time() - start_time, 2)
         ui.message.addItem(f"Анализ завершен за {end_time} секунд")
         interface_is_active(True)
-        ui.save_result_to_file.setEnabled(True)
-        QtTest.QTest.qWait(0)
+        ui.save_result_to_file.setEnabled(True)  # TODO: убрать в функцию интерфейса
+        ui.progress.setValue(0)
 
     else:
         ui.message.addItem(f"Части речи не выбраны, анализ невозможен!")
         ui.source_file_path.setEnabled(True)
         ui.show_source_select_dialog.setEnabled(True)
         ui.words_number.setEnabled(True)
-        return None
-        QtTest.QTest.qWait(0)
 
 
 # привязка сигналов к событиям элементов интерфейса
