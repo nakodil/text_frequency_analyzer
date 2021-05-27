@@ -1,4 +1,5 @@
 import re
+import os
 import sys
 import time
 from collections import Counter
@@ -79,25 +80,28 @@ def interface_is_active(condition: bool):
 
 def get_text_str() -> str:
     """
-    Берет путь к файлу и определяет его тип.
+    Определяет тип файла по пути.
     У *.txt нормализует кодировку его текстового содержимого и
     записывает его в строку.
-    У *.docx парсит содержимое и записывает его в строку.
+    У *.docx парсит текст абзацев и записывает его в строку.
+    Останавливает выполнение программы, если выбран недопустимый тип файла.
     """
-    # TODO: определить тип файла по пути
-    source_file_type = "txt"
     source_file_path = ui.source_file_path.toPlainText()
-    if source_file_type == "docx":
-        doc = docx.Document('example.docx')
-        text = []
-        # FIXME: Здесь три одинаковых параграфа в виде списка
+    source_file_type = os.path.splitext(source_file_path)[1]
+
+    if source_file_type == ".docx":
+        doc = docx.Document(source_file_path)
+        paragraphs_text_list = []
         for paragraph in doc.paragraphs:
-            text.append(paragraph.text)
-            print(text)
-        text_str = text(' '.join(text))
-        print(text_str)
-    else:
+            paragraphs_text_list.append(paragraph.text)
+        text_str = ' '.join(paragraphs_text_list)
+    elif source_file_type == ".txt":
         text_str = str(cnm.from_path(source_file_path).best().first())
+    else:
+        # TODO: остановить функцию и выдать ошибку в интерфейс
+        ui.message.addItem("Выбран недопустимый тип файла")
+        interface_is_active(True)
+        pass
     return text_str
 
 
@@ -130,9 +134,7 @@ def prepare_text(text_str: str) -> list:
 
 def morph_analyze_text(text_list: list, word_type_list: list) -> list:
     """
-    Проходит по всем словам в списке.
     Добавляет все существительные в нормальной форме в новый список.
-    TODO: брать парсы с максимальным score
     """
     normal_list = []
     morph = pymorphy2.MorphAnalyzer()
